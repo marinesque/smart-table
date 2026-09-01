@@ -11,13 +11,52 @@ export function initTable(settings, onAction) {
     const {tableTemplate, rowTemplate, before, after} = settings;
     const root = cloneTemplate(tableTemplate);
 
-    // @todo: #1.2 —  вывести дополнительные шаблоны до и после таблицы
+    // #1.2 — выводим дополнительные шаблоны до и после таблицы.
+    // "before" вставляем в обратном порядке, т.к. каждый prepend ставит
+    // элемент самым первым — без reverse() порядок блоков был бы перевёрнут.
+    before.reverse().forEach(subName => {
+        root[subName] = cloneTemplate(subName);
+        root.container.prepend(root[subName].container);
+    });
 
-    // @todo: #1.3 —  обработать события и вызвать onAction()
+    // "after" просто добавляем по порядку в конец контейнера
+    after.forEach(subName => {
+        root[subName] = cloneTemplate(subName);
+        root.container.append(root[subName].container);
+    });
+
+    // #1.3 — обрабатываем события формы таблицы
+    root.container.addEventListener('change', () => {
+        // Любое изменение поля (текст, select) — сразу перерисовываем
+        onAction();
+    });
+
+    root.container.addEventListener('reset', () => {
+        // reset срабатывает раньше, чем браузер реально очистит значения полей,
+        // поэтому откладываем вызов onAction на следующий тик через setTimeout
+        setTimeout(onAction);
+    });
+
+    root.container.addEventListener('submit', e => {
+        e.preventDefault();
+        // Передаём именно ту кнопку, которая инициировала submit
+        onAction(e.submitter);
+    });
 
     const render = (data) => {
-        // @todo: #1.1 — преобразовать данные в массив строк на основе шаблона rowTemplate
-        const nextRows = [];
+        // #1.1 — превращаем массив данных в массив DOM-строк
+        const nextRows = data.map(item => {
+            const row = cloneTemplate(rowTemplate);
+
+            Object.keys(item).forEach(key => {
+                if (row.elements[key]) {
+                    row.elements[key].textContent = item[key];
+                }
+            });
+
+            return row.container;
+        });
+
         root.elements.rows.replaceChildren(...nextRows);
     }
 
