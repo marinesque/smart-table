@@ -27,7 +27,18 @@ export function initFiltering(elements, indexes) {
             state[field] = '';                                 // и синхронизируем состояние для текущего рендера
         }
 
+        // Поля формы называются totalFrom/totalTo, а в данных строки поле
+        // называется total — правило arrayAsRange ищет совпадение ключей
+        // и ожидает именно массив [от, до]. Собираем их в нужный формат
+        // и убираем исходные totalFrom/totalTo, чтобы не мешали сравнению
+        // (для них всё равно нет одноимённого поля в строке данных).
+        const {totalFrom, totalTo, ...rest} = state;
+        const target = {
+            ...rest,
+            total: [totalFrom, totalTo]
+        };
+
         // #4.5 — отфильтровать данные используя компаратор
-        return data.filter(row => compare(row, state));
+        return data.filter(row => compare(row, target));
     }
 }
