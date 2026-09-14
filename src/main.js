@@ -1,7 +1,6 @@
 import './fonts/ys-display/fonts.css'
 import './style.css'
-
-import {data as sourceData} from "./data/dataset_1.js";
+//Убираем фиксированный датасет
 
 import {initData} from "./data.js";
 import {processFormData} from "./lib/utils.js";
@@ -13,8 +12,8 @@ import {initFiltering} from "./components/filtering.js";
 import {initSearching} from "./components/searching.js";
 
 
-// Исходные данные используемые в render()
-const {data, ...indexes} = initData(sourceData);
+// api — объект с асинхронными методами getIndexes()/getRecords() для работы с сервером
+const api = initData();
 
 /**
  * Сбор и обработка полей из таблицы
@@ -37,15 +36,18 @@ function collectState() {
  * Перерисовка состояния таблицы при любых изменениях
  * @param {HTMLButtonElement?} action
  */
-function render(action) {
+async function render(action) {
     let state = collectState(); // состояние полей из таблицы
-    let result = [...data]; // копируем для последующего изменения
-    // result = applySearching(result, state, action);
-    // result = applyFiltering(result, state, action);
-    // result = applySorting(result, state, action);
-    // result = applyPagination(result, state, action);
+    let query = {}; // тут будут данные
+    // query = applySearching(query, state, action);
+    // query = applyFiltering(query, state, action);
+    // query = applySorting(query, state, action);
+    // query = applyPagination(query, state, action);
 
-    sampleTable.render(result)
+    // запрашиваем данные с сервера по собранным параметрам
+    const {total, items} = await api.getRecords(query); 
+
+    sampleTable.render(items)
 }
 
 const sampleTable = initTable({
@@ -59,7 +61,7 @@ const sampleTable = initTable({
 
 const applySearching = initSearching('search');
 
-// initFiltering закомментирован: он синхронно запрашивает indexes.sellers,
+// initFiltering закомментирован: он синхронно требует indexes.sellers,
 // а после перехода на сервер список продавцов нужно будет запрашивать
 // асинхронно — восстановим модуль позже, когда появится асинхронная загрузка.
 // const applyFiltering = initFiltering(sampleTable.filter.elements, {
@@ -86,4 +88,9 @@ const applyPagination = initPagination(
 const appRoot = document.querySelector('#app');
 appRoot.appendChild(sampleTable.container);
 
-render();
+// получаем справочники продавцов и покупателей с сервера
+async function init() {
+    const indexes = await api.getIndexes();
+}
+
+init().then(render);
