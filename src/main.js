@@ -40,10 +40,10 @@ function collectState() {
 function render(action) {
     let state = collectState(); // состояние полей из таблицы
     let result = [...data]; // копируем для последующего изменения
-    result = applySearching(result, state, action);
-    result = applyFiltering(result, state, action);
-    result = applySorting(result, state, action);
-    result = applyPagination(result, state, action);
+    // result = applySearching(result, state, action);
+    // result = applyFiltering(result, state, action);
+    // result = applySorting(result, state, action);
+    // result = applyPagination(result, state, action);
 
     sampleTable.render(result)
 }
@@ -59,9 +59,12 @@ const sampleTable = initTable({
 
 const applySearching = initSearching('search');
 
-const applyFiltering = initFiltering(sampleTable.filter.elements, {
-    searchBySeller: indexes.sellers
-});
+// initFiltering закомментирован: он синхронно запрашивает indexes.sellers,
+// а после перехода на сервер список продавцов нужно будет запрашивать
+// асинхронно — восстановим модуль позже, когда появится асинхронная загрузка.
+// const applyFiltering = initFiltering(sampleTable.filter.elements, {
+//     searchBySeller: indexes.sellers
+// });
 
 const applySorting = initSorting([
     sampleTable.header.elements.sortByDate,
