@@ -38,9 +38,9 @@ function collectState() {
 async function render(action) {
     let state = collectState(); // состояние полей из таблицы
     let query = {}; // параметры будущего запроса к серверу
-    // query = applySearching(query, state, action);
-    // query = applyFiltering(query, state, action);
-    // query = applySorting(query, state, action);
+    query = applySearching(query, state, action);
+    query = applyFiltering(query, state, action);
+    query = applySorting(query, state, action);
     query = applyPagination(query, state, action); // добавляем параметры пагинации (limit, page) ДО запроса
 
     const {total, items} = await api.getRecords(query); // запрашиваем данные с сервера по собранным параметрам
@@ -60,12 +60,9 @@ const sampleTable = initTable({
 
 const applySearching = initSearching('search');
 
-// initFiltering закомментирован: он синхронно требует indexes.sellers,
-// а после перехода на сервер список продавцов нужно будет запрашивать
-// асинхронно — восстановим модуль позже, когда появится асинхронная загрузка.
-// const applyFiltering = initFiltering(sampleTable.filter.elements, {
-//     searchBySeller: indexes.sellers
-// });
+// initFiltering теперь возвращает две функции: updateIndexes и applyFiltering.
+// updateIndexes вызывается позже, когда индексы будут загружены с сервера.
+const {applyFiltering, updateIndexes} = initFiltering(sampleTable.filter.elements);
 
 const applySorting = initSorting([
     sampleTable.header.elements.sortByDate,
@@ -89,6 +86,11 @@ appRoot.appendChild(sampleTable.container);
 
 async function init() {
     const indexes = await api.getIndexes(); // получаем справочники продавцов и покупателей с сервера
+
+    // Заполняем селект продавцов опциями после того, как индексы загружены
+    updateIndexes(sampleTable.filter.elements, {
+        searchBySeller: indexes.sellers
+    });
 }
 
 init().then(render);
