@@ -12,14 +12,13 @@ export function initTable(settings, onAction) {
     const root = cloneTemplate(tableTemplate);
 
     // #1.2 — выводим дополнительные шаблоны до и после таблицы.
-    // "before" вставляем в обратном порядке, т.к. каждый prepend ставит
-    // элемент самым первым — без reverse() порядок блоков был бы перевёрнут.
+    // бефор вставляем в обратном порядке, т.к. каждый препенд ставит элемент самым первым, значит порядок блоков тогда будет перевернут
     before.reverse().forEach(subName => {
         root[subName] = cloneTemplate(subName);
         root.container.prepend(root[subName].container);
     });
 
-    // "after" просто добавляем по порядку в конец контейнера
+    // афтер нормально по порядку
     after.forEach(subName => {
         root[subName] = cloneTemplate(subName);
         root.container.append(root[subName].container);
@@ -27,19 +26,18 @@ export function initTable(settings, onAction) {
 
     // #1.3 — обрабатываем события формы таблицы
     root.container.addEventListener('change', () => {
-        // Любое изменение поля (текст, select) — сразу перерисовываем
+        // любое изменение поля (текст, селект) - сразу перерисовываем
         onAction();
     });
 
     root.container.addEventListener('reset', () => {
-        // reset срабатывает раньше, чем браузер реально очистит значения полей,
-        // поэтому откладываем вызов onAction на следующий тик через setTimeout
+        // ресет срабатывает раньше, чем браузер реально очистит значения полей, поэтому откладываем вызов onAction
         setTimeout(onAction);
     });
 
     root.container.addEventListener('submit', e => {
         e.preventDefault();
-        // Передаём именно ту кнопку, которая инициировала submit
+        // передаем кнопку, которая инициировала сабмит
         onAction(e.submitter);
     });
 
